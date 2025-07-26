@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Pomodoro Timer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #4a90e2;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .main-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 350px;
+            box-shadow: 0 0 10px gray;
+            text-align: center;
+            margin: 50px auto;
+        }
+        
+        .settings-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .timer-title {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .time-display {
+            font-size: 60px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 20px 0;
+        }
+        
+        .button-container {
+            margin-top: 25px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            margin: 0 8px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .start {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .pause {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .reset {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .popup-content {
+            background: white;
+            width: 400px;
+            margin: 50px auto;
+            padding: 25px;
+            border-radius: 10px;
+        }
+        
+        .popup h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .close-btn {
+            float: right;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .setting-row {
+            margin: 15px 0;
+        }
+        
+        .setting-row label {
+            display: inline-block;
+            width: 100px;
+        }
+        
+        .setting-row input {
+            width: 50px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        
+        .apply-btn {
+            background: #3498db;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        
+        .time-up {
+            color: #e74c3c !important;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .chart-container {
+            background: #4a90e2;
+            border-radius: 15px;
+            padding: 20px;
+            width: 600px;
+            box-shadow: 0 0 10px gray;
+            margin: 20px auto;
+        }
+        
+        .chart-title {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .chart {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+        }
+        
+        .bar-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .bar-label {
+            color: white;
+            font-size: 12px;
+            width: 60px;
+            text-align: right;
+        }
+        
+        .bar {
+            background: white;
+            height: 20px;
+            min-width: 5px;
+            border-radius: 0 3px 3px 0;
+            position: relative;
+        }
+        
+        .bar-value {
+            color: #4a90e2;
+            font-size: 10px;
+            font-weight: bold;
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <button class="settings-button" onclick="showSettings()">Settings</button>
+        
+        <h1 class="timer-title">Pomodoro Timer</h1>
+        <div class="time-display" id="timeDisplay">25:00</div>
+        
+        <div class="button-container">
+            <button class="btn start" onclick="startTimer()">Start</button>
+            <button class="btn pause" onclick="pauseTimer()">Pause</button>
+            <button class="btn reset" onclick="resetTimer()">Reset</button>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <h2 class="chart-title">Weekly Hours</h2>
+        <div class="chart" id="weeklyChart">
+        </div>
+    </div>
+
+    <div id="settingsPopup" class="popup">
+        <div class="popup-content">
+            <span class="close-btn" onclick="hideSettings()">&times;</span>
+            <h3>Timer Settings</h3>
+            
+            <div class="settings-section">
+                <h4>Time Settings</h4>
+                <div class="setting-row">
+                    <label>Hours:</label>
+                    <input type="number" id="hoursInput" min="0" max="23" value="0">
+                </div>
+                <div class="setting-row">
+                    <label>Minutes:</label>
+                    <input type="number" id="minutesInput" min="0" max="59" value="25">
+                </div>
+                <div class="setting-row">
+                    <label>Seconds:</label>
+                    <input type="number" id="secondsInput" min="0" max="59" value="0">
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h4>Color Settings</h4>
+                <div class="setting-row">
+                    <label>Background:</label>
+                    <input type="color" id="bgColorInput" class="color-input" value="#4a90e2">
+                </div>
+                <div class="setting-row">
+                    <label>Timer Text:</label>
+                    <input type="color" id="timerColorInput" class="color-input" value="#2c3e50">
+                </div>
+            </div>
+            
+            <button class="apply-btn" onclick="saveSettings()">Apply</button>
+        </div>
+    </div>
+
+    <script>
+        var timer = null;
+        var timeLeft = 0;
+        var running = false;
+        var sessionStartTime = null;
+
+        var userPrefs = {
+            bgColor: '#4a90e2',
+            timerColor: '#2c3e50',
+            defaultHours: 0,
+            defaultMinutes: 25,
+            defaultSeconds: 0
+        };
+
+        var weeklyData = {
+            Monday: 0,
+            Tuesday: 0,
+            Wednesday: 0,
+            Thursday: 0,
+            Friday: 0,
+            Saturday: 0,
+            Sunday: 0
+        };
+
+        function loadUserData() {
+            var savedPrefs = JSON.parse(localStorage.getItem('pomodoroPrefs'));
+            if (savedPrefs) {
+                userPrefs = savedPrefs;
+            }
+            
+            var savedWeekly = JSON.parse(localStorage.getItem('pomodoroWeekly'));
+            if (savedWeekly) {
+                weeklyData = savedWeekly;
+            }
+            
+            applyColors();
+            loadSettingsInputs();
+            updateChart();
+        }
+
+        function saveUserData() {
+            localStorage.setItem('pomodoroPrefs', JSON.stringify(userPrefs));
+            localStorage.setItem('pomodoroWeekly', JSON.stringify(weeklyData));
+        }
+
+        function applyColors() {
+            document.documentElement.style.setProperty('--bg-color', userPrefs.bgColor);
+            document.documentElement.style.setProperty('--timer-color', userPrefs.timerColor);
+        }
+
+        function loadSettingsInputs() {
+            document.getElementById('hoursInput').value = userPrefs.defaultHours;
+            document.getElementById('minutesInput').value = userPrefs.defaultMinutes;
+            document.getElementById('secondsInput').value = userPrefs.defaultSeconds;
+            document.getElementById('bgColorInput').value = userPrefs.bgColor;
+            document.getElementById('timerColorInput').value = userPrefs.timerColor;
+        }
+
+        function getCurrentDay() {
+            var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            var today = new Date();
+            return days[today.getDay()];
+        }
+
+        function addTimeToWeekly(minutes) {
+            var today = getCurrentDay();
+            weeklyData[today] += minutes;
+            saveUserData();
+            updateChart();
+        }
+
+        function updateChart() {
+            var chartDiv = document.getElementById('weeklyChart');
+            chartDiv.innerHTML = '';
+            
+            var maxHours = Math.max(...Object.values(weeklyData)) / 60;
+            if (maxHours === 0) maxHours = 1;
+            
+            for (var day in weeklyData) {
+                var hours = weeklyData[day] / 60;
+                var barWidth = (hours / maxHours) * 500;
+                
+                var barContainer = document.createElement('div');
+                barContainer.className = 'bar-container';
+                
+                var labelDiv = document.createElement('div');
+                labelDiv.className = 'bar-label';
+                labelDiv.textContent = day.substring(0, 3);
+                
+                var barDiv = document.createElement('div');
+                barDiv.className = 'bar';
+                barDiv.style.width = barWidth + 'px';
+                
+                var valueDiv = document.createElement('div');
+                valueDiv.className = 'bar-value';
+                valueDiv.textContent = hours.toFixed(1) + 'h';
+                
+                barDiv.appendChild(valueDiv);
+                barContainer.appendChild(labelDiv);
+                barContainer.appendChild(barDiv);
+                chartDiv.appendChild(barContainer);
+            }
+        }
+
+        function formatTime(totalSecs) {
+            var hrs = Math.floor(totalSecs / 3600);
+            var mins = Math.floor((totalSecs % 3600) / 60);
+            var secs = totalSecs % 60;
+            
+            if (hrs > 0) {
+                return hrs.toString().padStart(2, '0') + ':' + 
+                       mins.toString().padStart(2, '0') + ':' + 
+                       secs.toString().padStart(2, '0');
+            } else {
+                return mins.toString().padStart(2, '0') + ':' + 
+                       secs.toString().padStart(2, '0');
+            }
+        }
+
+        function updateDisplay() {
+            var display = document.getElementById('timeDisplay');
+            display.textContent = formatTime(timeLeft);
+            
+            if (timeLeft === 0) {
+                display.classList.add('time-up');
+            } else {
+                display.classList.remove('time-up');
+            }
+        }
+
+        function startTimer() {
+            if (running) return;
+            
+            if (timeLeft === 0) {
+                var h = parseInt(document.getElementById('hoursInput').value) || 0;
+                var m = parseInt(document.getElementById('minutesInput').value) || 0;
+                var s = parseInt(document.getElementById('secondsInput').value) || 0;
+                
+                timeLeft = (h * 3600) + (m * 60) + s;
+                
+                if (timeLeft === 0) {
+                    alert('Please set a time first!');
+                    return;
+                }
+            }
+            
+            running = true;
+            sessionStartTime = new Date();
+            updateDisplay();
+            
+            timer = setInterval(function() {
+                timeLeft--;
+                updateDisplay();
+                
+                if (timeLeft <= 0) {
+                    pauseTimer();
+                    alert('Time is up!');
+                    
+                    if (sessionStartTime) {
+                        var sessionLength = Math.round((new Date() - sessionStartTime) / 60000);
+                        addTimeToWeekly(sessionLength);
+                        sessionStartTime = null;
+                    }
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+                
+                if (sessionStartTime && running) {
+                    var sessionLength = Math.round((new Date() - sessionStartTime) / 60000);
+                    addTimeToWeekly(sessionLength);
+                    sessionStartTime = null;
+                }
+            }
+            running = false;
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timeLeft = 0;
+            
+            var h = parseInt(document.getElementById('hoursInput').value) || 0;
+            var m = parseInt(document.getElementById('minutesInput').value) || 0;
+            var s = parseInt(document.getElementById('secondsInput').value) || 0;
+            var total = (h * 3600) + (m * 60) + s;
+            
+            var display = document.getElementById('timeDisplay');
+            
+            if (total > 0) {
+                display.textContent = formatTime(total);
+            } else {
+                display.textContent = userPrefs.defaultMinutes + ':00';
+            }
+            
+            display.classList.remove('time-up');
+        }
+
+        function showSettings() {
+            document.getElementById('settingsPopup').style.display = 'block';
+        }
+
+        function hideSettings() {
+            document.getElementById('settingsPopup').style.display = 'none';
+        }
+
+        function saveSettings() {
+            userPrefs.defaultHours = parseInt(document.getElementById('hoursInput').value) || 0;
+            userPrefs.defaultMinutes = parseInt(document.getElementById('minutesInput').value) || 25;
+            userPrefs.defaultSeconds = parseInt(document.getElementById('secondsInput').value) || 0;
+            
+            userPrefs.bgColor = document.getElementById('bgColorInput').value;
+            userPrefs.timerColor = document.getElementById('timerColorInput').value;
+            
+            applyColors();
+            saveUserData();
+            resetTimer();
+            hideSettings();
+        }
+
+        window.onclick = function(event) {
+            var popup = document.getElementById('settingsPopup');
+            if (event.target == popup) {
+                hideSettings();
+            }
+        }
+
+        window.onload = function() {
+            loadUserData();
+            resetTimer();
+        }
+    </script>
+</body>
+</html>
